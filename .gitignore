@@ -5,3 +5,7 @@ obj/
 *.user
 *.suo
 packages/
+
+# 允許我們自訂的離線套件快取被提交入版控 (! 表示不忽略)
+!offline-packages/
+!offline-packages/*.nupkg

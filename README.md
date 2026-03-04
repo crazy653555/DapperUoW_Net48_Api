@@ -97,4 +97,14 @@ public Task<int> InsertOrderAsync(Order order, IUnitOfWork uow = null)
 *   **展示重點**: Service 中自己 `Create()` 兩條互不干擾的連線 (`readUow1`, `readUow2`) 送給 Repo 來解決 `Task.WhenAll` 的並發衝突，最後又開了第三條連線來進行最後的寫入。
 
 ---
+## ⚡ 無網路環境 (離線) 建置說明
+
+本專案考量到「公司內部無網路」的開發環境限制，已經將所有依賴的 NuGet 套件（包含 Autofac, Dapper, SQLite 等）預先下載並放置於 `offline-packages` 資料夾中。
+並且根目錄的 `nuget.config` 也已經設定強制只從該本地資料夾還原套件：
+
+1. **完全離線**：您只需將整個專案 clone 或複製到內部無網際網路的電腦上。
+2. **直接建置**：用 Visual Studio 2022 開啟專案，或是使用命令列執行 `dotnet build`，NuGet 將會自動從 `offline-packages` 夾中取得所有必要的 `.nupkg` 檔案，**不會報任何網路連線錯誤**。
+3. 如果出現找不到套件，請確定您複製專案時有包含 `offline-packages` 隱藏資料夾與 `nuget.config`。
+
+---
 **本專案作為架構解說用，歡迎團隊開發者參閱 `BaseRepository.cs` 與 `OrderService.cs` 中的註解說明！**
