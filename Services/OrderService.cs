@@ -19,7 +19,10 @@ namespace DapperUoW_Net48_Api.Services
 
         /// <summary>
         /// 情境 1: 多 Table 寫入，共生共死，全成功才 Commit
+        /// 此處展示了在 Service 中建立一個主力的 UnitOfWork，並將其一路往下傳遞給多個 Repository 呼叫
         /// </summary>
+        /// <param name="customerName">客戶名稱，將作為訂單主表的欄位</param>
+        /// <returns>非同步操作任務</returns>
         public async Task CreateOrderProcessAsync(string customerName)
         {
             using (var uow = _uowFactory.Create())
@@ -52,7 +55,10 @@ namespace DapperUoW_Net48_Api.Services
 
         /// <summary>
         /// 情境 2: 單純查詢，不用手動傳入 UoW，交給 Repository 自己開關連線
+        /// 外部直接呼叫此方法，由底層 BaseRepository 在沒有收到外部 UoW 時，自行建立臨時連線並於查畢後釋放
         /// </summary>
+        /// <param name="orderId">欲查詢的訂單主鍵</param>
+        /// <returns>帶有明細的訂單傳輸物件 DTO</returns>
         public async Task<OrderWithDetailsDto> GetOrderInfoAsync(int orderId)
         {
             // 非常乾淨，Service 就像不知道有資料庫連線這回事
@@ -61,7 +67,10 @@ namespace DapperUoW_Net48_Api.Services
 
         /// <summary>
         /// 情境 3: 混和操作。先並發兩條連線查詢，算完結果再開第三條連線寫入
+        /// 此處展示 Factory 模式的核心價值：可以輕鬆取得多條互不干涉的連線，滿足 Task.WhenAll 並發查詢需求，
+        /// 避免 ADO.NET 同一連線被多執行緒存取引發的錯誤。
         /// </summary>
+        /// <returns>非同步操作任務</returns>
         public async Task DashboardProcessConcurrentAsync()
         {
             // 為了展示並行，我們同時去抓不同的資料庫資訊 (此處以同樣是查 Order 代替示範)

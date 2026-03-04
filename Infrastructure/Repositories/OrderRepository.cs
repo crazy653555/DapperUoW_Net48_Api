@@ -7,12 +7,24 @@ using DapperUoW_Net48_Api.Core.Models.Entities;
 
 namespace DapperUoW_Net48_Api.Infrastructure.Repositories
 {
+    /// <summary>
+    /// 訂單倉儲實作
+    /// 負責與底層 SQLite (模擬 Oracle 架構) 進行實際資料存取
+    /// 繼承 BaseRepository 獲得連線生命週期管控能力
+    /// </summary>
     public class OrderRepository : BaseRepository, IOrderRepository
     {
         public OrderRepository(IUnitOfWorkFactory factory) : base(factory)
         {
         }
 
+        /// <summary>
+        /// 新增訂單資料
+        /// 透過 SQLite 的 RETURNING (類似 Oracle) 取得剛建立的 Id，並支援參數綁定 :param
+        /// </summary>
+        /// <param name="order">訂單實體，包含客戶名稱與日期</param>
+        /// <param name="uow">若被傳入，則加入目前交易；若無則自動新建連線</param>
+        /// <returns>新增成功後的訂單 ID</returns>
         public Task<int> InsertOrderAsync(Order order, IUnitOfWork uow = null)
         {
             return ExecuteWithDbAsync(uow, async db =>
@@ -29,6 +41,12 @@ namespace DapperUoW_Net48_Api.Infrastructure.Repositories
             });
         }
 
+        /// <summary>
+        /// 新增訂單明細資料
+        /// </summary>
+        /// <param name="detail">明細實體，需依附於有效的主訂單 ID</param>
+        /// <param name="uow">若被傳入，則加入目前交易；若無則自動新建連線</param>
+        /// <returns>非同步工作完成 (無回傳值)</returns>
         public Task InsertOrderDetailAsync(OrderDetail detail, IUnitOfWork uow = null)
         {
             return ExecuteWithDbAsync(uow, async db =>
@@ -44,6 +62,12 @@ namespace DapperUoW_Net48_Api.Infrastructure.Repositories
             });
         }
 
+        /// <summary>
+        /// 根據訂單編號，使用 Dapper 的 QueryMultipleAsync 一次取得主副表資料
+        /// </summary>
+        /// <param name="orderId">欲查詢的訂單 ID</param>
+        /// <param name="uow">若被傳入，則加入目前交易；若無則自動新建連線</param>
+        /// <returns>對外傳輸的 DTO 物件，內含明細集合</returns>
         public Task<OrderWithDetailsDto> GetOrderWithDetailsAsync(int orderId, IUnitOfWork uow = null)
         {
             return ExecuteWithDbAsync(uow, async db =>
